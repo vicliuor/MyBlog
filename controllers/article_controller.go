@@ -3,7 +3,9 @@ package controllers
 import (
 	"MyBlog/global"
 	"MyBlog/models"
+	"errors"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -31,4 +33,18 @@ func GetArticle(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, articles)
+}
+
+func GetArticleById(ctx *gin.Context) {
+	id := ctx.Param("id")
+	var article models.Article
+	if err := global.Db.Where(&article, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		}
+		return
+	}
+	ctx.JSON(http.StatusOK, article)
 }
